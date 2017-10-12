@@ -53,7 +53,7 @@ def load_measurements(filename, fmode):
             row = np.array(dataFrame.iloc[i,:], dtype=object)
         except IndexError:
             continue
-        print(i)
+
         #If condition to check if there are corrupted measurements
         if not -1 in row:
             continue
