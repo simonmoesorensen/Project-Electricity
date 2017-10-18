@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct 12 17:11:49 2017
+Created on Wed Oct 18 12:05:23 2017
 
 INPUT:
     
@@ -24,7 +24,6 @@ USAGE:
 @Author: Simon Moe Sørensen, moe.simon@gmail.com
 """
 
-#Import modules
 import pandas as pd
 import numpy as np
 
@@ -32,105 +31,93 @@ import numpy as np
 def load_measurements(filename, fmode):
     
     #Initial variables
-    corrLine = []
-    corrRow = []
+    warning = False
+    corr = []
     fmodeStr = ["forward fill","backward fill","drop"]
-    dropAll = False
     
-    #Load the datafile into DataFrame
-    dataFrame = pd.read_csv(filename,header=None,
+    #Ignore cases
+    fmode = fmode.lower()
+    
+    #Load the datafile into DataFrame (variable name: df)
+    df = pd.read_csv(filename,header=None,
         names=["year", "month", "day", "hour", "minute", "second", "zone1", "zone2", "zone3", "zone4"])
     
-    #Save dataFrame variable
-    dataFrameBac = dataFrame
-
+    #Define the measurement columns and create an np array
+    m = np.array(df.iloc[:,6:10])
+    
+    #Find rows where -1 is present
+    corr = np.unique(np.where(-1 == m)[0])
+    
+    #Check if first or last row is corrupted and compare to errorhandling mode
+    
+    if fmode in fmodeStr[0:2]:
+        #Check if first row is corrupted
+        if 0 in corr and (fmode in fmodeStr[0]):
+            #Change to drop mode
+            fmodeold = fmode
+            fmode = "drop"
+            #Print warning
+            warning = True
         
-    #Check rows for corrupted measurements
-    for i in range(len(dataFrame)):
-            
-        #Define the row
-        try:    
-            row = np.array(dataFrame.iloc[i,:], dtype=object)
-        except IndexError:
-            continue
+        #Check if last row is corrupted
+        if len(df)-1 in corr and (fmode in fmodeStr[1]):
+            #Change to drop mode
+            fmodeold = fmode
+            fmode = "drop"
+            #Print warning
+            warning = True
+    
+    #Iterate over the corrupted rows and do errorhandling depending on the userinput
+    for i in range(len(corr)):
         
-        #If condition to check if there are corrupted measurements
-        if not -1 in row:
-            continue
-        
-        #Add row as corrupted
-        corrRow.append(i)
-        
-        #Add line as corrupted (for print)
-        corrLine.append(i+1)
-        
-        #Check fmode, ignore upper- or lowercase
-        #foward fill
-        if fmode.lower() in fmodeStr[0]:
-        
-            #Run loop to go back a row until a valid row is found
-            for j in range(len(dataFrame[0:i])):
+        #Forward fill
+        if fmode in fmodeStr[0]:
+           
+            #Run loop to go backwards until a valid row is found
+            for j in range(len(df[0:corr[i]])):
                 
-                #Define the last row
-                try:
-                    lastRow = np.array(dataFrame.iloc[i-(j+1),:], dtype=object)
-                
-                #If it is the first row, set condition to delete all corrupted
-                #measurements
-                except IndexError:
-                    #Drop all corrupted measurements instead
-                    dropAll = True
-                    break
-                    
+                #Define last row
+                lastRow = np.array(df.iloc[corr[i]-(j+1),:], dtype=object)
                     
                 #Replace row with former valid row
                 if -1 not in lastRow:
-                    dataFrame.iloc[i,:] = dataFrame.iloc[i-(j+1),:]
+                    df.iloc[corr[i],:] = df.iloc[corr[i]-(j+1),:]
                     break
 
-            #End of for j loop
-        
-        #backward fill
-        elif fmode.lower() in fmodeStr[1]:
+                #End of for j loop
+       
+        #Backward fill
+        elif fmode in fmodeStr[1]:
             
-            #Run loop to go forward a row until a valid row is found
-            for j in range(len(dataFrame[i:])):
-            
-                #Check if last row is corrupted
-                if -1 in np.array(dataFrame.iloc[(len(dataFrame)-1):]):
-                    #Drop all corrupted measurements instead
-                    dropAll = True
-                    break    
+            #Run loop to go forwards until a row until a valid row is found
+            for j in range(len(df[corr[i]:])):
                 
                 #Define next row
-                nextRow = np.array(dataFrame.iloc[i+(j+1),:], dtype=object)
+                nextRow = np.array(df.iloc[corr[i]+(j+1),:], dtype=object)
    
                 #Replace row with next valid row
                 if -1 not in nextRow:
-                    dataFrame.iloc[i,:] = dataFrame.iloc[i+(j+1),:]
+                    df.iloc[corr[i],:] = df.iloc[corr[i]+(j+1),:]
                     break
-
-            #End of for j loop
+                
+        if fmode in fmodeStr[2]:
+            #Delete corrupted rows
+            print(i)
+            df = df.drop(corr[i])
         
-        #drop
-        elif fmode.lower() in fmodeStr[2]:
-            #Delete row
-            dataFrame = dataFrame.drop(i)
-            
-    
-    #End of for i loop
-            
-    #Define tvec and data variables, but check if we should drop all corrupted first
-    if dropAll:
-        dataFrame = dataFrameBac.drop(corrRow)
+        #End of for i loop
         
+    #Print warning
+    if warning:
         print("""
 !WARNING!
 {} error 
-deleting corrupted lines at: {}""".format(fmode,corrLine))
-        
-    data = np.array(dataFrame.iloc[:,6:10])
+deleting corrupted lines at: {}""".format(fmodeold,corr+1))
     
-    tvec = np.array(dataFrame.iloc[:,0:6], dtype=object)
+    #Define data and tvec        
+    data = np.array(df.iloc[:,6:10])
     
-    return (tvec,data)
+    tvec = np.array(df.iloc[:,0:6], dtype=object)
+            
+    return tvec,data
+            
