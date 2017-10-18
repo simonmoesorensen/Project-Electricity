@@ -7,9 +7,9 @@ INPUT:
     filename: String, the full name of the datafile
     fmode: String, specifying how to handle corrupted measurements.
         Can be:
-            "forward fill" - Replace corrupted row with former valid row
-            "backward fill" - Replace corrupted row with next valid row
-            "drop" - Delete corrupted row
+            "forward fill"
+            "backward fill"
+            "drop"
     
 OUTPUT:
     
@@ -27,6 +27,10 @@ USAGE:
 #Import modules
 import pandas as pd
 import numpy as np
+
+#Generator to optimize loading
+def loadedFile():
+    
 
 #Function
 def load_measurements(filename, fmode):
@@ -53,7 +57,7 @@ def load_measurements(filename, fmode):
             row = np.array(dataFrame.iloc[i,:], dtype=object)
         except IndexError:
             continue
-
+        print(i)
         #If condition to check if there are corrupted measurements
         if not -1 in row:
             continue
