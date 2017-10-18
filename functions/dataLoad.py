@@ -42,6 +42,7 @@ def load_measurements(filename, fmode):
     df = pd.read_csv(filename,header=None,
         names=["year", "month", "day", "hour", "minute", "second", "zone1", "zone2", "zone3", "zone4"])
     
+<<<<<<< HEAD
     #Define the measurement columns and create an np array
     m = np.array(df.iloc[:,6:10])
     
@@ -58,6 +59,30 @@ def load_measurements(filename, fmode):
             fmode = "drop"
             #Print warning
             warning = True
+=======
+    #Save dataFrame variable
+    dataFrameBac = dataFrame
+
+        
+    #Check rows for corrupted measurements
+    for i in range(len(dataFrame)+1):
+            
+        #Define the row
+        try:    
+            row = np.array(dataFrame.iloc[i,:], dtype=object)
+        except IndexError:
+            continue
+
+        #If condition to check if there are corrupted measurements
+        if not -1 in row:
+            continue
+        
+        #Add row as corrupted
+        corrRow.append(i)
+        
+        #Add line as corrupted (for print)
+        corrLine.append(i+1)
+>>>>>>> 18f12fa09d39954a113766302c0027d1998ecb46
         
         #Check if last row is corrupted
         if len(df)-1 in corr and (fmode in fmodeStr[1]):
@@ -106,13 +131,32 @@ def load_measurements(filename, fmode):
             df = df.drop(corr[i])
         
         #End of for i loop
+=======
+
+            #End of for j loop
+            
+    #End of for i loop
+            
+    #Define tvec and data variables, but check if we should drop all corrupted first
+    if dropAll:
+        dataFrame = dataFrameBac.drop(corrRow)
+>>>>>>> 18f12fa09d39954a113766302c0027d1998ecb46
         
     #Print warning
     if warning:
         print("""
 !WARNING!
 {} error 
+<<<<<<< HEAD
 deleting corrupted lines at: {}""".format(fmodeold,corr+1))
+=======
+deleting corrupted lines at: {}""".format(fmode,corrLine))
+        
+    if fmode.lower() in fmodeStr[2]:
+        dataFrame = dataFrame.drop(corrRow)
+        
+    data = np.array(dataFrame.iloc[:,6:10])
+>>>>>>> 18f12fa09d39954a113766302c0027d1998ecb46
     
     #Define data and tvec        
     data = np.array(df.iloc[:,6:10])
