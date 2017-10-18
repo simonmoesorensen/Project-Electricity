@@ -102,7 +102,7 @@ def load_measurements(filename, fmode):
                 
         if fmode in fmodeStr[2]:
             #Delete corrupted rows
-            print(i)
+            
             df = df.drop(corr[i])
         
         #End of for i loop
