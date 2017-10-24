@@ -66,58 +66,34 @@ def load_measurements(filename, fmode):
             fmode = "drop"
             #Print warning
             warning = True
+        
+    #Replace -1 with NaN values if 
+    if fmode in fmodeStr[0:2]:
+        df = df.replace(-1,np.NaN)
     
-    #Iterate over the corrupted rows and do errorhandling depending on the userinput
-    for i in range(len(corr)):
-        
-        #Forward fill
-        if fmode in fmodeStr[0]:
-           
-            #Run loop to go backwards until a valid row is found
-            for j in range(len(df[0:corr[i]])):
-                
-                #Define last row
-                lastRow = np.array(df.iloc[corr[i]-(j+1),:], dtype=object)
-                    
-                #Replace row with former valid row
-                if -1 not in lastRow:
-                    df.iloc[corr[i],:] = df.iloc[corr[i]-(j+1),:]
-                    break
-
-                #End of for j loop
-       
-        #Backward fill
-        elif fmode in fmodeStr[1]:
-            
-            #Run loop to go forwards until a row until a valid row is found
-            for j in range(len(df[corr[i]:])):
-                
-                #Define next row
-                nextRow = np.array(df.iloc[corr[i]+(j+1),:], dtype=object)
+    if fmode == "forward fill":
+        #Use pandas forward fill
+        df = df.ffill()
+    
+    elif fmode == "backward fill":
+        #Use pandas backfill
+        df = df.bfill()
+    
+    if fmode == "drop":
+        #Delete corrupted rows
+        df = df.drop(corr)
    
-                #Replace row with next valid row
-                if -1 not in nextRow:
-                    df.iloc[corr[i],:] = df.iloc[corr[i]+(j+1),:]
-                    break
-                
-        if fmode in fmodeStr[2]:
-            #Delete corrupted rows
-            
-            df = df.drop(corr[i])
-        
-        #End of for i loop
-        
     #Print warning
     if warning:
         print("""
 !WARNING!
 {} error 
 deleting corrupted lines at: {}""".format(fmodeold,corr+1))
+        
+    #Define data and tvec as a pandas dataFrame     
+    data = df.iloc[:,6:10]
     
-    #Define data and tvec        
-    data = np.array(df.iloc[:,6:10])
-    
-    tvec = np.array(df.iloc[:,0:6], dtype=object)
-            
+    tvec = df.iloc[:,0:6]        
+        
     return tvec,data
-            
+        
