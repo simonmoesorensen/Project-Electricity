@@ -93,7 +93,7 @@ deleting corrupted lines at: {}""".format(fmodeold,corr+1))
     #Define data and tvec as a pandas dataFrame     
     data = df.iloc[:,6:10]
     
-    tvec = df.iloc[:,0:6]        
+    tvec = df.iloc[:,0:6]
         
     return tvec,data
         
