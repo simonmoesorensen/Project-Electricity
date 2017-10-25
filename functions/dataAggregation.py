@@ -64,8 +64,8 @@ def aggregate_measurements(tvec, data, period):
     try:
         #Get the dataFrame of aggregated data
         agg = df_g['zone1','zone2','zone3','zone4'].sum() #Sum the measurements
-        agg = agg.reset_index() #Reset index for agg
-        agg = agg[["zone1","zone2","zone3","zone4"]] #Get only measurements
+        agg_m = agg.reset_index() #Reset index for agg, changed variable to conserve names in "agg"
+        agg_m = agg_m[["zone1","zone2","zone3","zone4"]] #Get only measurements
     
     except UnboundLocalError:
         #If period is "minute" then df_g will be unbound and we do no aggregation
@@ -95,7 +95,7 @@ def aggregate_measurements(tvec, data, period):
         stack = pd.DataFrame(stack,columns=["year", "month", "day", "hour", "minute", "second"])
     
         #Joining together time vectors and data in dataFrame_final
-        df_f = stack.join(agg) #Join
+        df_f = stack.join(agg_m) #Join, using agg_m because of neutralized indicies
 
         #Define data_a and tvec_a seperately
         data_a = df_f.iloc[:,6:10]
@@ -107,7 +107,7 @@ def aggregate_measurements(tvec, data, period):
         time = pd.DataFrame(np.arange(0,24),columns=["hour of the day"])
         
         #Join together the time vector and data vector
-        df_f = time.join(agg)
+        df_f = time.join(agg_m/365) #Division by 365 to get the average consumption
         
         #Define data_a and tvec_a seperately
         data_a = df_f.iloc[:,1:5]
