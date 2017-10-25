@@ -34,9 +34,6 @@ def load_measurements(filename, fmode):
     warning = False
     fmodeStr = ["forward fill","backward fill","drop"]
     
-    #Ignore cases
-    fmode = fmode.lower()
-    
     #Load the datafile into DataFrame (variable name: df)
     df = pd.read_csv(filename,header=None,
         names=["year", "month", "day", "hour", "minute", "second", "zone1", "zone2", "zone3", "zone4"])
