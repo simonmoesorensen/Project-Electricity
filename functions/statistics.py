@@ -29,15 +29,17 @@ USAGE:
 
 def print_statistics(tvec,data):
     
+    #Define the relevant statistics
+    dStats=['min','25%','50%','75%','max']
+    
     #Get descriptive statistics of data, zone-wise
-    statzone = data.describe().T[['mean','min','25%','50%','75%','max']].rename(
+    statzone = data.describe().T[dStats].rename(
             index={'zone1': 1, 'zone2': 2, 'zone3': 3, 'zone4': 4})
         #The line above gets the statistics, transposes it, while only selecting 
         #the relevant statistics. Then it renames the zones to integers
     
     #Get descriptive statistics of all zones
-    statall = data.sum(axis=1).describe().T[
-            ['mean','min','25%','50%','75%','max']].rename("All")
+    statall = data.sum(axis=1).describe().T[dStats].rename("All")
         #The line above does practically the same, however it is a Series and
         #has different renaming syntax
     
@@ -47,4 +49,4 @@ def print_statistics(tvec,data):
     #Assign index name
     stat.index.name = "Zone"
     
-    print(stat)
+    print("\n",stat)
