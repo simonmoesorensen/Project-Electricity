@@ -29,6 +29,12 @@ period = "minute"
 periodStr = ["minute","hour","day","month","hour of the day"]
 unit = "Watt-hour"
     
+print("""
+=======================================================================
+Welcome to the "Analysis of household electricity consumption"-program
+This program can analyse your consumption of electricity in your house!
+=======================================================================""")
+
 while True:
     
     print("")
