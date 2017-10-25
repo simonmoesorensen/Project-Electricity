@@ -32,7 +32,6 @@ def load_measurements(filename, fmode):
     
     #Initial variables
     warning = False
-    corr = []
     fmodeStr = ["forward fill","backward fill","drop"]
     
     #Ignore cases
@@ -42,35 +41,25 @@ def load_measurements(filename, fmode):
     df = pd.read_csv(filename,header=None,
         names=["year", "month", "day", "hour", "minute", "second", "zone1", "zone2", "zone3", "zone4"])
     
-    #Define the measurement columns and create an np array
-    m = np.array(df.iloc[:,6:10])
-    
-    #Find rows where -1 is present
-    corr = np.unique(np.where(-1 == m)[0])
+    #Replace -1 with NaN values
+    df = df.replace(-1,np.NaN)
     
     #Check if first or last row is corrupted and compare to errorhandling mode
+    if df.iloc[0,:].isnull().any() and fmode in fmodeStr[0]:
+        #Change to drop mode
+        fmodeold = fmode
+        fmode = "drop"
+        #Print warning
+        warning = True
     
-    if fmode in fmodeStr[0:2]:
-        #Check if first row is corrupted
-        if 0 in corr and (fmode in fmodeStr[0]):
-            #Change to drop mode
-            fmodeold = fmode
-            fmode = "drop"
-            #Print warning
-            warning = True
-        
-        #Check if last row is corrupted
-        if len(df)-1 in corr and (fmode in fmodeStr[1]):
-            #Change to drop mode
-            fmodeold = fmode
-            fmode = "drop"
-            #Print warning
-            warning = True
-        
-    #Replace -1 with NaN values if 
-    if fmode in fmodeStr[0:2]:
-        df = df.replace(-1,np.NaN)
-    
+    if df.iloc[len(df)-1,:].isnull().any() and fmode in fmodeStr[1]:
+        #Change to drop mode
+        fmodeold = fmode
+        fmode = "drop"
+        #Print warning
+        warning = True
+
+    #Do errorhandling        
     if fmode == "forward fill":
         #Use pandas forward fill
         df = df.ffill()
@@ -79,16 +68,16 @@ def load_measurements(filename, fmode):
         #Use pandas backfill
         df = df.bfill()
     
-    if fmode == "drop":
-        #Delete corrupted rows
-        df = df.drop(corr)
+    elif fmode == "drop":
+        #Use pandas drop missing values
+        df = df.dropna()
    
     #Print warning
     if warning:
         print("""
 !WARNING!
 {} error 
-deleting corrupted lines at: {}""".format(fmodeold,corr+1))
+dropping all corrupted rows""".format(fmodeold))
         
     #Define data and tvec as a pandas dataFrame     
     data = df.iloc[:,6:10]
@@ -96,4 +85,3 @@ deleting corrupted lines at: {}""".format(fmodeold,corr+1))
     tvec = df.iloc[:,0:6]
         
     return tvec,data
-        
