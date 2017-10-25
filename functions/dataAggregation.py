@@ -27,6 +27,7 @@ USAGE:
 """
 
 import numpy as np
+import pandas as pd
 
 def aggregate_measurements(tvec, data, period):
     
@@ -39,7 +40,7 @@ def aggregate_measurements(tvec, data, period):
     #Initial variable
     stack = np.full([1,6],-1)
     
-    #Aggregate data for hourly consumption
+    #Group the data according to defined period
     if period == "hour":
         
         #Group by hours
@@ -60,16 +61,24 @@ def aggregate_measurements(tvec, data, period):
         #Group by hour of the day
         df_g = df.groupby(['hour'])
                    
-    #Get the dataFrame of aggregated data
-    agg = df_g['zone1','zone2','zone3','zone4'].sum()
+    try:
+        #Get the dataFrame of aggregated data
+        agg = df_g['zone1','zone2','zone3','zone4'].sum() #Sum the measurements
+        agg = agg.reset_index() #Reset index for agg
+        agg = agg[["zone1","zone2","zone3","zone4"]] #Get only measurements
+    
+    except UnboundLocalError:
+        #If period is "minute" then df_g will be unbound and we do no aggregation
+        data_a = data
+        tvec_a = tvec
     
     #Get time vectors
-    if period != "hour of the day":   
+    if period not in ["hour of the day", "minute"]:   
         for row in range(len(agg)):
             #Define row as an array
             row = np.array(agg.iloc[row].name)
             
-            #Add the missing collumns for time
+            #Find the missing collumns for time
             miss = np.full([6-np.size(row)],0)
             
             #Append so we get the same size array of time and stack
@@ -81,29 +90,27 @@ def aggregate_measurements(tvec, data, period):
 
         #Remove placeholder from stack
         stack = np.delete(stack,0,axis=0)
+        
+        #Convert time vector (stack) into dataFrame
+        stack = pd.DataFrame(stack,columns=["year", "month", "day", "hour", "minute", "second"])
     
         #Joining together time vectors and data in dataFrame_final
-        df_f = np.array(np.hstack([stack,np.array(agg)]),dtype=object)
-    
+        df_f = stack.join(agg) #Join
+
         #Define data_a and tvec_a seperately
-        data_a = df_f[:,6:10]
+        data_a = df_f.iloc[:,6:10]
         
-        tvec_a = df_f[:,0:6]
+        tvec_a = df_f.iloc[:,0:6]
     
-    else:
+    elif period == "hour of the day":
         #Define time as the intervals 00:00 - 01:00
-        time = np.arange(0,24).reshape(24,1)
+        time = pd.DataFrame(np.arange(0,24),columns=["hour of the day"])
         
         #Join together the time vector and data vector
-        df_f = np.array(np.hstack([time,np.array(agg)]),dtype=object)
+        df_f = time.join(agg)
         
         #Define data_a and tvec_a seperately
-        data_a = df_f[:,1:5]
-        tvec_a = df_f[:,0]
-    
-    #Check if period is minute and do no aggregation
-    if period == "minute":
-        data_a = data
-        tvec_a = tvec
+        data_a = df_f.iloc[:,1:5]
+        tvec_a = df_f.iloc[:,0]
         
     return tvec_a, data_a
