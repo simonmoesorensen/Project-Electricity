@@ -56,9 +56,9 @@ while True:
         print("")
 
         #Display a selection of fmodes
-        menu2 = int(displayMenu(["Fill forward (replace corrupt measurement with latest valid measurement)",
-                             "Fill backward (replace corrupt measurement with next valid measurement)",
-                             "Delete corrupt measurements",
+        menu2 = int(displayMenu(["Forward fill (replace corrupt measurement with latest valid measurement)",
+                             "Backward fill (replace corrupt measurement with next valid measurement)",
+                             "Drop (delete corrupt measurements)",
                              "Exit"]))
         if menu2 == 4:
             continue
@@ -91,12 +91,12 @@ while True:
                     break
 
                 filename = inputStr("File not found, please enter a valid name: ")
-        
-        
-        
+
+
+
 #Aggregate data
     elif menu == 2 and dataLoaded:
-        start = time.time()        
+        start = time.time()
         menu = int(displayMenu(["Consumption per minute (no aggregation)",
                             "Consumption per hour",
                             "Consumption per day",
@@ -105,10 +105,10 @@ while True:
                             "Back"]))
         if menu == 6: #Go back
             continue
-        
+
         #Prevent AggData to be defined as 6 by checking menu first
         AggData = menu
-        
+
         period = periodStr[(AggData)-1] #define period
 
         tvec,data = aggregate_measurements(tvecOld,dataOld,period) #Aggregate data, but always agg from raw data
@@ -117,7 +117,7 @@ while True:
         if (data > 10000).any().any():
             data = data/1000
             unit = "Kilowatt-hour"
-        
+
         end = time.time()
         print("Time spent aggregating data:",round(end-start,4),"seconds")
 
@@ -134,10 +134,10 @@ while True:
         #See if user wants each zone or all zones
         print("\nPlease decide whether to plot for each or all zones \n")
         menu2 = displayMenu(["Each zone","All zones","Back"])
-        
+
         if menu2 == 3: #Go back if user decides to
             continue
-        
+
         #Assign plot data to what the user specified
         if AggData == 1:
             print("""\n====================================!!WARNING!!====================================
@@ -146,13 +146,13 @@ It is recommended to at least aggregate the data for an hourly consumption
 before generating a plot, since the loading time could take several minutes.
 ====================================!!WARNING!!====================================\n""")
             WarnMenu = displayMenu(["Yes","No"])
-            
+
             #Skip code if user regrets
             if WarnMenu == 2:
                 continue
             else:
                 print("\nYou might as well go finish your bachelor's degree. It will be done loading at that time\n")
-        
+
         #Define the plotting data
         if menu2 == 2:
             pltData = data.sum(axis=1)
@@ -166,18 +166,18 @@ before generating a plot, since the loading time could take several minutes.
         #Define x-axis and delete 0's
         if AggData != 5:
             pltX = tvec.apply(lambda x: ' '.join(x.astype(str)), axis=1)
-            
+
             xAxis = [] #Placeholder
-        
+
             for i in range(len(pltX)):
                 row = np.array(pltX[i].split(" ")) #Create row of strings in np array
                 mask = np.arange(len(row)-AggData,len(row)) #Create array of indicies to delete
                 row = np.delete(row,mask) #Delete 0 values
                 rowStr = " ".join(row) #Join row
                 xAxis.append(rowStr) #Append to axis variable
-            
+
             xLabel = "Date"
-                
+
         else:
             xAxis = tvec
             xLabel = "Hour of the day"
