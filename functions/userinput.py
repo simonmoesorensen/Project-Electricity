@@ -30,6 +30,34 @@ def inputStr(prompt):
             print("Not a valid string. Please try again")
     return str
 
+def displayMenu(options):
+    """
+
+    INPUT:
+        options: An array of strings
+
+    OUTPUT:
+        menu: an integer of the user's choice
+
+    USAGE:
+        menu = displayMenu(options)
+    """
+
+    #Print menu
+    for i in range(len(options)):
+        print("{}. {}".format(i+1,options[i]))
+
+    #Initial variable
+    choice = 0
+
+    #Get menu choice
+    while not choice in np.arange(1,len(options)+1):
+        choice = inputNumber("Please choose a menu item: ")
+        if choice > len(options) or choice <= 0:
+            print("\nChoice out of menu range")
+
+    return choice
+
 def inputNumber(prompt):
     """
     Userinput that only allows any number and converts them to float values
@@ -50,29 +78,3 @@ def inputNumber(prompt):
         except ValueError:
             print("Not valid number. Please try again")
     return num
-
-def displayMenu(options):
-    """
-    DISPLAYMENU Displays a menu of options, ask the user to choose an item
-    and returns the number of the menu item chosen.
-
-    Usage: choice = displayMenu(options)
-
-    Input options Menu options (array of strings)
-    Output choice Chosen option (integer)
-
-
-    Author: Mikkel N. Schmidt, mnsc@dtu.dk, 2015
-    """
-
-    # Display menu options
-    for i in range(len(options)):
-        print("{:d}. {:s}".format(i+1, options[i]))
-
-    # Get a valid menu choice
-    choice = 0
-
-    while not(np.any(choice == np.arange(len(options))+1)):
-       choice = inputNumber("Please choose a menu item: ")
-
-    return choice
