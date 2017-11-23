@@ -11,7 +11,7 @@ OUTPUT:
     
     Screen output: a table of descriptive statistics
     
-                   mean  min  25%   50%   75%    max
+                  min  25%   50%   75%    max
         Zone                                        
         1      
         2      
@@ -39,7 +39,7 @@ def print_statistics(tvec,data):
         #the relevant statistics. Then it renames the zones to integers
     
     #Get descriptive statistics of all zones
-    statall = data.sum(axis=1).describe().T[dStats].rename("All")
+    statall = statzone.sum().describe().T[dStats].rename('All')
         #The line above does practically the same, however it is a Series and
         #has different renaming syntax
     
