@@ -14,7 +14,7 @@ import numpy as np
 
 #Import functions
 from functions.userinput import displayMenu,inputStr
-from functions.dataLoad import load_measurements
+from functions.dataLoad import load_measurements, FileExtensionError
 from functions.dataAggregation import aggregate_measurements
 from functions.statistics import print_statistics
 
@@ -68,32 +68,30 @@ while True:
 
         print("""\nType "exit" to exit""")
 
-        #Get filename
-        filename = inputStr("Please enter the name of your datafile (with extension, if any): ")
-
         #Check for valid filename and exit condition
         while True:
             try:
+                #Get filename
+                filename = inputStr("Please enter the name of your datafile (with extension, .csv): ")
                 start = time.time() #Time
                 tvec,data = load_measurements(filename,fmode) #Try to load data
                 #Save raw data in old variables
-                tvecOld = tvec
-                dataOld = data
+                tvecOld,dataOld = tvec,data
 
                 dataLoaded = True #Set data as loaded
                 end = time.time() #Time
                 print("Time spent loading data:",round(end-start,4),"seconds")
                 print("-----Data loaded succesfully-----")
                 break
-
+            
+            except FileExtensionError:
+                print("Wrong file extension, please enter a valid extension (.csv)")
+                
             except FileNotFoundError:
                 if filename == "exit":
                     break
-
-                filename = inputStr("File not found, please enter a valid name: ")
-
-
-
+                print("File not found, please enter a valid name")
+                
 #Aggregate data
     elif menu == 2 and dataLoaded:
         start = time.time()
@@ -143,16 +141,14 @@ while True:
             print("""\n====================================!!WARNING!!====================================
 You are about to generate plots of a very large amount of data.
 It is recommended to at least aggregate the data for an hourly consumption
-before generating a plot, since the loading time could take several minutes.
+before generating a plot, since the loading time is approximately 10-15 seconds.
 ====================================!!WARNING!!====================================\n""")
             WarnMenu = displayMenu(["Yes","No"])
 
             #Skip code if user regrets
             if WarnMenu == 2:
                 continue
-            else:
-                print("\nYou might as well go finish your bachelor's degree. It will be done loading at that time\n")
-
+           
         #Define the plotting data
         if menu2 == 2:
             pltData = data.sum(axis=1)
@@ -162,22 +158,20 @@ before generating a plot, since the loading time could take several minutes.
         #Define plot parameters
         figsize = (9,5.0625)
         title = "Consumption per {}".format(period)
-
-        #Define x-axis and delete 0's
+                
+        #Define x-axis and delete 0's       
         if AggData != 5:
-            pltX = tvec.apply(lambda x: ' '.join(x.astype(str)), axis=1)
-
-            xAxis = [] #Placeholder
-
-            for i in range(len(pltX)):
-                row = np.array(pltX[i].split(" ")) #Create row of strings in np array
-                mask = np.arange(len(row)-AggData,len(row)) #Create array of indicies to delete
-                row = np.delete(row,mask) #Delete 0 values
-                rowStr = " ".join(row) #Join row
-                xAxis.append(rowStr) #Append to axis variable
-
-            xLabel = "Date"
-
+            #Get tvec as string without 0's
+            tvec_0 = tvec.iloc[:,0:(len(tvec.columns)-AggData)].astype(str)
+            
+            #set xAxis variable as years
+            xAxis = tvec_0.iloc[:,0]
+            
+            #Add all the columns of tvec_0 into a series
+            for i in range(len(tvec_0.columns)-1):
+                xAxis = xAxis+" "+tvec_0.iloc[:,i+1]
+                
+            xLabel = "Date" #Set label
         else:
             xAxis = tvec
             xLabel = "Hour of the day"

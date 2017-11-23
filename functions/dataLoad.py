@@ -27,6 +27,10 @@ USAGE:
 import pandas as pd
 import numpy as np
 
+class FileExtensionError(Exception):
+    def __init__(self,msg):
+        self.msg = msg
+    
 #Function
 def load_measurements(filename, fmode):
 
@@ -37,6 +41,10 @@ def load_measurements(filename, fmode):
     #Load the datafile into DataFrame (variable name: df)
     df = pd.read_csv(filename,header=None,
         names=["year", "month", "day", "hour", "minute", "second", "zone1", "zone2", "zone3", "zone4"])
+
+    #Check if csv file
+    if not ".csv" in filename:
+        raise FileExtensionError("Wrong file extension, please try again")
 
     #Replace -1 with NaN values
     df = df.replace(-1,np.NaN)
